@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <div class="">
+      <input type="file" accept="image/jpeg, image/png" style="display:none" multiple onchange="handleFiles()" id="upload-file" />
+      <!-- <label for="upload-file">Select some file</label> -->
+      <button id="choose-button">Choose Image</button>
+      <p>selected files: <span id="fileNum">0</span>; total size: <span id="fileSize">0</span></p>
+    </div>
+    <button type="button" name="button" onclick="sendFiles()">上传文件</button>
+    <div class="dropbox" style="width: 200px; height:200px; background-color: blue">
+      you can drop file here
+    </div>
+    <div class="preview" style="width: 200px; height:200px;">
+
+    </div>
+  </body>
+  <script type="text/javascript">
+    let inputElement = document.querySelector('#upload-file');
+    let buttonReplace = document.querySelector('#choose-button');
+    //  When the button is clicked you invoke a click event on the file input element.
+    buttonReplace.addEventListener("click", (e) => {
+      if (inputElement) {
+        inputElement.click();
+      }
+      e.preventDefault();
+    }, false);
+    inputElement.addEventListener("change", handleFiles, false);
+    function handleFiles(files) {
+      let oFiles = files || inputElement.files, /* now you can work with the file list */
+          nBytes = 0,
+          nFiles = oFiles.length;
+      for (var nFileId = 0; nFileId < nFiles; nFileId++) {
+        nBytes += oFiles[nFileId].size;
+      }
+      let sOutput = nBytes + " bytes";
+      // optional code for myltiples approximation
+      for (let aMultiples = ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
+        sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " (" + nBytes + " bytes)";
+      }
+
+      // end of optional codePoint
+      document.querySelector("#fileNum").innerHTML = nFiles;
+      document.querySelector("#fileSize").innerHTML = sOutput;
+
+      // preview Image
+      for (let i = 0; i < oFiles.length; i++) {
+        let file = oFiles[i];
+        let imageType = /^image\//;
+
+        if (!imageType.test(file.type)) {
+          continue;
+        }
+
+
+        let preview = document.querySelector(".preview");
+        let img = document.createElement("img");
+        img.classList.add("obj");
+        img.file = file;
+        preview.appendChild(img);
+
+        // read image
+        let readder = new FileReader();
+        readder.onload = (function(aImg) {
+          return function(e) {
+            // console.log(e)
+            aImg.src = e.target.result;
+          }
+        })(img);
+        readder.readAsDataURL(file);
+      }
+    }
+
+    let dropbox = document.querySelector(".dropbox");
+    dropbox.addEventListener("dragenter", dragenter, false);
+    dropbox.addEventListener("dragover", dragover, false);
+    dropbox.addEventListener("drop", drop, false);
+
+    function dragenter(e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    function dragover(e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    function drop(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      var dt = e.dataTransfer;
+      var files = dt.files;
+
+      handleFiles(files);
+    }
+    // upload file
+    function sendFiles() {
+      let imgs = document.querySelectorAll(".obj");
+
+      for (let i in imgs) {
+        new FileUpload(imgs[i], imgs[i].file);
+      }
+    }
+
+    function FileUpload(img, file) {
+      var reader = new FileReader();
+      this.ctrl = createThrobber(img);
+      var xhr = new XMLHttpRequest();
+      this.xhr = xhr;
+
+      var self = this;
+      this.xhr.upload.addEventListener("progress", function(e) {
+            if (e.lengthComputable) {
+              var percentage = Math.round((e.loaded * 100) / e.total);
+              self.ctrl.update(percentage);
+            }
+          }, false);
+
+      xhr.upload.addEventListener("load", function(e){
+              self.ctrl.update(100);
+              var canvas = self.ctrl.ctx.canvas;
+              canvas.parentNode.removeChild(canvas);
+          }, false);
+      xhr.open("POST", "http://demos.hacks.mozilla.org/paul/demos/resources/webservices/devnull.php");
+      xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');
+      reader.onload = function(evt) {
+        xhr.send(evt.target.result);
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    // var data = new FormData();
+    // var request = new XMLHttpRequest();
+    // data.append('file', document.querySelector('#upload-file').files[0]);
+    // // AJAX request finished
+    // request.addEventListener('load', function(e) {
+    //   // request.response will hold the response from the server
+    //   console.log(request.response);
+    // });
+    // // Upload progress on request.upload
+    // request.upload.addEventListener('progress', function(e) {
+    //   var percent_complete = (e.loaded / e.total) * 100;
+    //
+    //   // Percentage of upload completed
+    //   console.log(percent_complete)
+    // });
+    // // if server is sending a JSON response then set JSON response type
+    // request.responseType = 'json';
+    //
+    // // request.open('post', 'upload.php');
+    // request.send(data);
+  </script>
+</html>
