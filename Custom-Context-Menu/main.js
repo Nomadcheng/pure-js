@@ -50,10 +50,9 @@
       posx = e.pageX;
       posy = e.pageY;
     } else if (e.clientX || e.clientY) {
-      posx = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-      posy = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+      posx = e.clientX;
+      posy = e.clientY;
     }
-
     return {
       x: posx,
       y: posy
@@ -144,6 +143,7 @@
 
   /**
    * Listens for keyup events.
+   * set display none
    */
   function keyupListener() {
     window.onkeyup = function(e) {
@@ -171,9 +171,23 @@
       menu.classList.add( contextMenuActive );
     }
   }
+  /**
+   * getViewPortSize
+   */
+  function getViewPortSize(w) {
+    w = w || window;
+    // 除了IE 8及更早的版本外，其他浏览器都能用
+    if(w.innerWidth != null) return {w: w.innerWidth, h: w.innerHeight};
 
+    let d = w.document;
+    if(document.compatMode == "Css1Compat") return {w: d.documentElement.clientWidth, h: d.documentElement.clientHeight};
+
+    // 对怪异模式下的浏览器
+    return {w: d.body.clientWidth, h: d.body.clientHeight};
+  }
   /**
    * Turns the custom context menu off.
+   * set display: none
    */
   function toggleMenuOff() {
     if ( menuState !== 0 ) {
@@ -195,8 +209,8 @@
     menuWidth = menu.offsetWidth + 4;
     menuHeight = menu.offsetHeight + 4;
 
-    windowWidth = window.innerWidth;
-    windowHeight = window.innerHeight;
+
+    let {windowWidth, windowHeight} = getViewPortSize();
 
     if ( (windowWidth - clickCoordsX) < menuWidth ) {
       menu.style.left = windowWidth - menuWidth + "px";
@@ -227,16 +241,3 @@
   init();
 
 })();
-
-
-
-
-var a = function(props) {
- return new Promise((resolve, reject) => {
- if (props) {
-     return Promise.resolve(props);
-   } else {
-     return Promise.reject(props);
-   }
- })
-}
